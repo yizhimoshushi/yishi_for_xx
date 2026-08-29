@@ -4,531 +4,257 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>蜡烛仪式</title>
+    <title>启动动画</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            width: 100vw;
-            height: 100vh;
-            overflow: hidden;
-            cursor: pointer;
-            user-select: none;
+            width: 100vw; height: 100vh; overflow: hidden; cursor: pointer; user-select: none;
             background:
-                repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 0, 0, 0.05) 2px, rgba(0, 0, 0, 0.05) 4px),
-                repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(0, 0, 0, 0.04) 2px, rgba(0, 0, 0, 0.04) 4px),
+                repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.05) 2px, rgba(0,0,0,0.05) 4px),
+                repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(0,0,0,0.04) 2px, rgba(0,0,0,0.04) 4px),
                 radial-gradient(ellipse at 30% 40%, #3a3a3a 0%, #2a2a2a 40%, #1a1a1a 70%, #111 100%);
             background-color: #222;
         }
-
         body::before {
-            content: '';
-            position: fixed;
-            inset: 0;
+            content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
             background: url("data:image/svg+xml,%3Csvg width='6' height='6' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='1' height='1' x='0' y='0' fill='rgba(255,255,255,0.02)'/%3E%3Crect width='1' height='1' x='3' y='3' fill='rgba(0,0,0,0.06)'/%3E%3C/svg%3E") repeat;
-            pointer-events: none;
-            z-index: 0;
         }
-
         #hint {
-            position: fixed;
-            bottom: 40px;
-            left: 50%;
-            transform: translateX(-50%);
-            color: rgba(255, 255, 255, 0.3);
-            font-family: 'Georgia', serif;
-            font-size: 14px;
-            letter-spacing: 2px;
-            transition: opacity 0.8s;
-            z-index: 100;
+            position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
+            color: rgba(255,255,255,0.3); font-family: 'Georgia', serif; font-size: 14px;
+            letter-spacing: 2px; transition: opacity 0.8s; z-index: 100;
         }
+        #candles { position: fixed; inset: 0; z-index: 10; pointer-events: none; }
+        .candle-wrapper { position: absolute; display: flex; justify-content: center; align-items: flex-end; }
+        .candle-wrapper:nth-child(1) { top: calc(50% - 80px); left: calc(50% - 180px); }
+        .candle-wrapper:nth-child(2) { top: calc(50% - 80px); left: calc(50% + 166px); }
+        .candle-wrapper:nth-child(3) { top: calc(50% + 120px); left: calc(50% - 7px); }
 
-        #candles {
-            position: fixed;
-            inset: 0;
-            z-index: 10;
-            pointer-events: none;
-        }
-
-        .candle-wrapper {
-            position: absolute;
-            display: flex;
-            justify-content: center;
-            align-items: flex-end;
-        }
-
-        .candle-wrapper:nth-child(1) {
-            top: calc(50% - 80px);
-            left: calc(50% - 180px);
-        }
-
-        .candle-wrapper:nth-child(2) {
-            top: calc(50% - 80px);
-            left: calc(50% + 166px);
-        }
-
-        .candle-wrapper:nth-child(3) {
-            top: calc(50% + 120px);
-            left: calc(50% - 7px);
-        }
-
-        /* ===== 白色蜡烛 ===== */
         .candle {
-            position: absolute;
-            width: 14px;
-            height: 60px;
+            position: absolute; width: 14px; height: 60px;
             background: linear-gradient(90deg, #d8d0c4 0%, #f5f0e8 25%, #fff 50%, #f0ebe0 75%, #cdc5b8 100%);
-            border-radius: 2px;
-            z-index: 2;
-            cursor: pointer;
-            opacity: 0;
-
-            /* 仅保留垂直偏移，移除 scale */
+            border-radius: 2px; z-index: 2; cursor: pointer; opacity: 0;
             transform: translateY(-30px);
-
-            /* 使用 ease-out 让下落自然减速停稳 */
-            transition:
-                opacity 0.5s ease-out,
-                transform 0.5s ease-out;
-
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+            transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.5);
         }
-
-        /* 归位时只还原位移，不再有缩放 */
-        .candle.visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
+        .candle.visible { opacity: 1; transform: translateY(0); }
         .candle.lit {
-            background: linear-gradient(180deg,
-                    rgba(255, 210, 140, 0.5) 0%,
-                    rgba(255, 190, 100, 0.2) 20%,
-                    transparent 45%),
+            background: linear-gradient(180deg, rgba(255,210,140,0.5) 0%, rgba(255,190,100,0.2) 20%, transparent 45%),
                 linear-gradient(90deg, #d8d0c4 0%, #f5f0e8 25%, #fff 50%, #f0ebe0 75%, #cdc5b8 100%);
         }
-
         .candle.fierce {
-            background: linear-gradient(180deg,
-                    rgba(255, 180, 80, 0.7) 0%,
-                    rgba(255, 120, 30, 0.3) 25%,
-                    transparent 55%),
+            background: linear-gradient(180deg, rgba(255,180,80,0.7) 0%, rgba(255,120,30,0.3) 25%, transparent 55%),
                 linear-gradient(90deg, #d8d0c4 0%, #f5f0e8 25%, #fff 50%, #f0ebe0 75%, #cdc5b8 100%);
         }
 
-        /* 烛芯 */
         .wick {
-            position: absolute;
-            top: -8px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 2px;
-            height: 8px;
-            background: linear-gradient(to top, #444, #111);
-            border-radius: 1px;
-            transition: background 0.3s;
+            position: absolute; top: -8px; left: 50%; transform: translateX(-50%);
+            width: 2px; height: 8px; background: linear-gradient(to top, #444, #111);
+            border-radius: 1px; transition: background 0.3s;
         }
+        .candle.lit .wick { background: linear-gradient(to top, #cc4400, #333, #111); }
 
-        .candle.lit .wick {
-            background: linear-gradient(to top, #cc4400, #333, #111);
-        }
-
-        /* ===== 统一火焰系统（CSS变量驱动三态平滑插值）===== */
         .flame {
-            position: absolute;
-            left: 50%;
-            z-index: 3;
-            pointer-events: none;
-
-            /* 默认值 = normal lit 状态 */
-            --fw: 10px;
-            --fh: 18px;
-            --ft: -28px;
-            --blur-outer: 1.2px;
-            --bright-outer: 1.3;
-            --blur-inner: 0.6px;
-            --bright-inner: 1.4;
-            --glow-spread: 4px;
-            --glow-alpha: 0.6;
-
-            width: var(--fw);
-            height: var(--fh);
-            top: var(--ft);
-            transform: translateX(-50%) scale(0);
-            opacity: 0;
-            filter: drop-shadow(0 0 var(--glow-spread) rgba(255, 160, 50, var(--glow-alpha)));
-            transition:
-                opacity 0.4s ease,
-                transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
-                width 0.7s ease,
-                height 0.7s ease,
-                top 0.7s ease,
-                filter 0.7s ease;
+            position: absolute; left: 50%; z-index: 3; pointer-events: none;
+            --fw: 10px; --fh: 18px; --ft: -28px;
+            --blur-outer: 1.2px; --bright-outer: 1.3;
+            --blur-inner: 0.6px; --bright-inner: 1.4;
+            --glow-spread: 4px; --glow-alpha: 0.6;
+            width: var(--fw); height: var(--fh); top: var(--ft);
+            transform: translateX(-50%) scale(0); opacity: 0;
+            filter: drop-shadow(0 0 var(--glow-spread) rgba(255,160,50,var(--glow-alpha)));
+            transition: opacity 0.4s ease, transform 0.5s cubic-bezier(0.34,1.56,0.64,1),
+                width 0.7s ease, height 0.7s ease, top 0.7s ease, filter 0.7s ease;
         }
-
-        /* 外焰 */
         .flame::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: radial-gradient(ellipse at 50% 90%,
-                    #ffdd55 0%, #ffaa22 35%, #ff5500 65%, transparent 100%);
+            content: ''; position: absolute; inset: 0;
+            background: radial-gradient(ellipse at 50% 90%, #ffdd55 0%, #ffaa22 35%, #ff5500 65%, transparent 100%);
             border-radius: 50% 50% 20% 20% / 60% 60% 40% 40%;
-            filter: blur(var(--blur-outer)) brightness(var(--bright-outer));
-            opacity: 0.95;
+            filter: blur(var(--blur-outer)) brightness(var(--bright-outer)); opacity: 0.95;
             animation: flameOuter 2s infinite ease-in-out alternate;
             animation-delay: var(--outer-delay, 0s);
             transition: filter 0.7s ease, background 0.7s ease;
         }
-
-        /* 内焰 */
         .flame::after {
-            content: '';
-            position: absolute;
-            bottom: 2px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: calc(var(--fw) * 0.5);
-            height: calc(var(--fh) * 0.55);
-            background: radial-gradient(ellipse at 50% 80%,
-                    #fff 0%, #cceeff 30%, #5599ff 70%, transparent 100%);
+            content: ''; position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%);
+            width: calc(var(--fw) * 0.5); height: calc(var(--fh) * 0.55);
+            background: radial-gradient(ellipse at 50% 80%, #fff 0%, #cceeff 30%, #5599ff 70%, transparent 100%);
             border-radius: 50% 50% 30% 30% / 70% 70% 30% 30%;
-            filter: blur(var(--blur-inner)) brightness(var(--bright-inner));
-            opacity: 1;
+            filter: blur(var(--blur-inner)) brightness(var(--bright-inner)); opacity: 1;
             animation: flameInner 1.8s infinite ease-in-out alternate-reverse;
             animation-delay: var(--inner-delay, -0.3s);
             transition: filter 0.7s ease, width 0.7s ease, height 0.7s ease, bottom 0.7s ease;
         }
+        .candle.lit .flame { opacity: 1; transform: translateX(-50%) scale(1); }
 
-        .candle.lit .flame {
-            opacity: 1;
-            transform: translateX(-50%) scale(1);
-        }
-
-        /* --- Normal Lit 摇曳 --- */
         @keyframes flameOuter {
-            0% {
-                transform: scaleX(1) scaleY(1) skewX(0deg);
-            }
-
-            25% {
-                transform: scaleX(0.92) scaleY(1.06) skewX(-1deg);
-            }
-
-            50% {
-                transform: scaleX(1.04) scaleY(0.94) skewX(1.5deg);
-            }
-
-            75% {
-                transform: scaleX(0.96) scaleY(1.03) skewX(-0.5deg);
-            }
-
-            100% {
-                transform: scaleX(1.02) scaleY(0.97) skewX(0.8deg);
-            }
+            0% { transform: scaleX(1) scaleY(1) skewX(0deg); }
+            25% { transform: scaleX(0.92) scaleY(1.06) skewX(-1deg); }
+            50% { transform: scaleX(1.04) scaleY(0.94) skewX(1.5deg); }
+            75% { transform: scaleX(0.96) scaleY(1.03) skewX(-0.5deg); }
+            100% { transform: scaleX(1.02) scaleY(0.97) skewX(0.8deg); }
         }
-
         @keyframes flameInner {
-            0% {
-                transform: translateX(-50%) scaleY(1);
-            }
-
-            50% {
-                transform: translateX(-50%) scaleY(0.85);
-            }
-
-            100% {
-                transform: translateX(-50%) scaleY(1.05);
-            }
+            0% { transform: translateX(-50%) scaleY(1); }
+            50% { transform: translateX(-50%) scaleY(0.85); }
+            100% { transform: translateX(-50%) scaleY(1.05); }
         }
 
-        /* --- Transitioning 过渡态：覆盖CSS变量，transition自动插值 --- */
         .candle.transitioning .flame {
-            --fw: 14px;
-            --fh: 28px;
-            --ft: -34px;
-            --blur-outer: 1.8px;
-            --bright-outer: 1.6;
-            --blur-inner: 0.8px;
-            --bright-inner: 1.7;
-            --glow-spread: 8px;
-            --glow-alpha: 0.85;
+            --fw: 14px; --fh: 28px; --ft: -34px;
+            --blur-outer: 1.8px; --bright-outer: 1.6;
+            --blur-inner: 0.8px; --bright-inner: 1.7;
+            --glow-spread: 8px; --glow-alpha: 0.85;
         }
-
-        .candle.transitioning .flame::before {
-            animation: flameTransitionOuter 0.75s ease-in-out infinite alternate;
-        }
-
-        .candle.transitioning .flame::after {
-            animation: flameTransitionInner 0.75s ease-in-out infinite alternate;
-        }
+        .candle.transitioning .flame::before { animation: flameTransitionOuter 0.75s ease-in-out infinite alternate; }
+        .candle.transitioning .flame::after { animation: flameTransitionInner 0.75s ease-in-out infinite alternate; }
 
         @keyframes flameTransitionOuter {
-            0% {
-                transform: scaleX(1) scaleY(1) skewX(0deg) rotate(0deg);
-            }
-
-            30% {
-                transform: scaleX(0.75) scaleY(1.35) skewX(-2deg) rotate(-1deg);
-            }
-
-            60% {
-                transform: scaleX(1.2) scaleY(0.85) skewX(3deg) rotate(1.5deg);
-            }
-
-            100% {
-                transform: scaleX(0.9) scaleY(1.15) skewX(-1.5deg) rotate(-0.5deg);
-            }
+            0% { transform: scaleX(1) scaleY(1) skewX(0deg) rotate(0deg); }
+            30% { transform: scaleX(0.75) scaleY(1.35) skewX(-2deg) rotate(-1deg); }
+            60% { transform: scaleX(1.2) scaleY(0.85) skewX(3deg) rotate(1.5deg); }
+            100% { transform: scaleX(0.9) scaleY(1.15) skewX(-1.5deg) rotate(-0.5deg); }
         }
-
         @keyframes flameTransitionInner {
-            0% {
-                transform: translateX(-50%) scaleY(1) scaleX(1);
-            }
-
-            50% {
-                transform: translateX(-50%) scaleY(1.3) scaleX(0.7);
-            }
-
-            100% {
-                transform: translateX(-50%) scaleY(0.8) scaleX(1.2);
-            }
+            0% { transform: translateX(-50%) scaleY(1) scaleX(1); }
+            50% { transform: translateX(-50%) scaleY(1.3) scaleX(0.7); }
+            100% { transform: translateX(-50%) scaleY(0.8) scaleX(1.2); }
         }
 
-        /* --- Fierce 猛烈态：覆盖CSS变量，transition自动插值 --- */
         .candle.fierce .flame {
-            --fw: 18px;
-            --fh: 36px;
-            --ft: -38px;
-            --blur-outer: 2px;
-            --bright-outer: 1.6;
-            --blur-inner: 1px;
-            --bright-inner: 2;
-            --glow-spread: 12px;
-            --glow-alpha: 1;
+            --fw: 18px; --fh: 36px; --ft: -38px;
+            --blur-outer: 2px; --bright-outer: 1.6;
+            --blur-inner: 1px; --bright-inner: 2;
+            --glow-spread: 12px; --glow-alpha: 1;
         }
-
         .candle.fierce .flame::before {
-            background: radial-gradient(ellipse at 50% 85%,
-                    #ffe066 0%, #ffaa00 30%, #ff5500 60%, #cc2200 85%, transparent 100%);
+            background: radial-gradient(ellipse at 50% 85%, #ffe066 0%, #ffaa00 30%, #ff5500 60%, #cc2200 85%, transparent 100%);
             animation: fierceOuter 0.15s infinite linear;
         }
-
         .candle.fierce .flame::after {
             bottom: 4px;
-            background: radial-gradient(ellipse at 50% 80%,
-                    #fff 0%, #bbddff 30%, #6699ff 70%, transparent 100%);
+            background: radial-gradient(ellipse at 50% 80%, #fff 0%, #bbddff 30%, #6699ff 70%, transparent 100%);
             animation: fierceInner 0.12s infinite linear;
         }
-
         @keyframes fierceOuter {
-            0% {
-                transform: scaleX(1) scaleY(1) skewX(0deg) rotate(0deg);
-            }
-
-            20% {
-                transform: scaleX(0.8) scaleY(1.3) skewX(-4deg) rotate(-2deg);
-            }
-
-            40% {
-                transform: scaleX(1.15) scaleY(0.85) skewX(3deg) rotate(1.5deg);
-            }
-
-            60% {
-                transform: scaleX(0.85) scaleY(1.25) skewX(-2deg) rotate(-1deg);
-            }
-
-            80% {
-                transform: scaleX(1.1) scaleY(0.9) skewX(5deg) rotate(2.5deg);
-            }
-
-            100% {
-                transform: scaleX(0.9) scaleY(1.2) skewX(-3deg) rotate(-1.5deg);
-            }
+            0% { transform: scaleX(1) scaleY(1) skewX(0deg) rotate(0deg); }
+            20% { transform: scaleX(0.8) scaleY(1.3) skewX(-4deg) rotate(-2deg); }
+            40% { transform: scaleX(1.15) scaleY(0.85) skewX(3deg) rotate(1.5deg); }
+            60% { transform: scaleX(0.85) scaleY(1.25) skewX(-2deg) rotate(-1deg); }
+            80% { transform: scaleX(1.1) scaleY(0.9) skewX(5deg) rotate(2.5deg); }
+            100% { transform: scaleX(0.9) scaleY(1.2) skewX(-3deg) rotate(-1.5deg); }
         }
-
         @keyframes fierceInner {
-            0% {
-                transform: translateX(-50%) scaleY(1) scaleX(1);
-            }
-
-            33% {
-                transform: translateX(-52%) scaleY(0.7) scaleX(1.2);
-            }
-
-            66% {
-                transform: translateX(-48%) scaleY(1.3) scaleX(0.8);
-            }
-
-            100% {
-                transform: translateX(-50%) scaleY(0.8) scaleX(1.1);
-            }
+            0% { transform: translateX(-50%) scaleY(1) scaleX(1); }
+            33% { transform: translateX(-52%) scaleY(0.7) scaleX(1.2); }
+            66% { transform: translateX(-48%) scaleY(1.3) scaleX(0.8); }
+            100% { transform: translateX(-50%) scaleY(0.8) scaleX(1.1); }
         }
 
-        /* ===== 弹出消息 ===== */
         .message {
-            position: fixed;
-            left: 50%;
-            bottom: -80px;
-            transform: translateX(-50%);
-            font-family: 'Georgia', serif;
-            font-size: 24px;
-            color: rgba(255, 255, 255, 0.9);
-            text-shadow: 0 0 20px rgba(255, 180, 80, 0.7), 0 0 60px rgba(255, 120, 0, 0.3);
-            opacity: 0;
-            transition: bottom 1s ease, opacity 0.8s ease;
-            z-index: 50;
-            pointer-events: none;
+            position: fixed; left: 50%; bottom: -80px; transform: translateX(-50%);
+            font-family: 'Georgia', serif; font-size: 24px; color: rgba(255,255,255,0.9);
+            text-shadow: 0 0 20px rgba(255,180,80,0.7), 0 0 60px rgba(255,120,0,0.3);
+            opacity: 0; transition: bottom 1s ease, opacity 0.8s ease;
+            z-index: 50; pointer-events: none; white-space: nowrap;
         }
+        .message.show { bottom: 120px; opacity: 1; }
+        .message.hide { opacity: 0; bottom: 160px; }
 
-        .message.show {
-            bottom: 120px;
-            opacity: 1;
-        }
-
-        .message.hide {
-            opacity: 0;
-            bottom: 160px;
-        }
-
-        /* ===== 灰色浑雾 ===== */
         #fog {
-            position: fixed;
-            inset: 0;
-            z-index: 200;
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 3s ease;
+            position: fixed; inset: 0; z-index: 200; pointer-events: none;
+            opacity: 0; transition: opacity 3s ease;
         }
-
-        #fog.active {
-            opacity: 1;
-        }
-
+        #fog.active { opacity: 1; }
         .fog-layer {
-            position: absolute;
-            inset: -50%;
-            background: radial-gradient(ellipse at 50% 50%, rgba(80, 80, 80, 0.9) 0%, rgba(50, 50, 50, 0.7) 40%, transparent 70%);
+            position: absolute; inset: -50%;
+            background: radial-gradient(ellipse at 50% 50%, rgba(80,80,80,0.9) 0%, rgba(50,50,50,0.7) 40%, transparent 70%);
             animation: fogDrift 8s infinite ease-in-out alternate;
         }
-
         .fog-layer:nth-child(2) {
-            background: radial-gradient(ellipse at 30% 60%, rgba(90, 90, 90, 0.7) 0%, transparent 60%);
-            animation: fogDrift2 10s infinite ease-in-out alternate;
-            animation-delay: -3s;
+            background: radial-gradient(ellipse at 30% 60%, rgba(90,90,90,0.7) 0%, transparent 60%);
+            animation: fogDrift2 10s infinite ease-in-out alternate; animation-delay: -3s;
         }
-
         .fog-layer:nth-child(3) {
-            background: radial-gradient(ellipse at 70% 40%, rgba(70, 70, 70, 0.8) 0%, transparent 55%);
-            animation: fogDrift3 7s infinite ease-in-out alternate;
-            animation-delay: -5s;
+            background: radial-gradient(ellipse at 70% 40%, rgba(70,70,70,0.8) 0%, transparent 55%);
+            animation: fogDrift3 7s infinite ease-in-out alternate; animation-delay: -5s;
         }
+        @keyframes fogDrift { 0% { transform: translate(0,0) scale(1); } 100% { transform: translate(30px,-20px) scale(1.1); } }
+        @keyframes fogDrift2 { 0% { transform: translate(0,0) scale(1.05); } 100% { transform: translate(-40px,15px) scale(1.15); } }
+        @keyframes fogDrift3 { 0% { transform: translate(0,0) scale(1); } 100% { transform: translate(20px,30px) scale(1.2); } }
 
-        @keyframes fogDrift {
-            0% {
-                transform: translate(0, 0) scale(1)
-            }
-
-            100% {
-                transform: translate(30px, -20px) scale(1.1)
-            }
-        }
-
-        @keyframes fogDrift2 {
-            0% {
-                transform: translate(0, 0) scale(1.05)
-            }
-
-            100% {
-                transform: translate(-40px, 15px) scale(1.15)
-            }
-        }
-
-        @keyframes fogDrift3 {
-            0% {
-                transform: translate(0, 0) scale(1)
-            }
-
-            100% {
-                transform: translate(20px, 30px) scale(1.2)
-            }
-        }
-
-        /* 桌面光影 */
         #table-light {
-            position: fixed;
-            inset: 0;
-            z-index: 1;
-            pointer-events: none;
-            opacity: 0;
+            position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: 0;
             transition: opacity 1.5s;
-            background: radial-gradient(ellipse at 50% 50%, rgba(255, 170, 80, 0.07) 0%, transparent 60%);
+            background: radial-gradient(ellipse at 50% 50%, rgba(255,170,80,0.07) 0%, transparent 60%);
         }
-
-        #table-light.on {
-            opacity: 1;
-        }
-
-        #table-light.fierce {
-            background: radial-gradient(ellipse at 50% 50%, rgba(255, 130, 40, 0.22) 0%, transparent 50%);
-        }
+        #table-light.on { opacity: 1; }
+        #table-light.fierce { background: radial-gradient(ellipse at 50% 50%, rgba(255,130,40,0.22) 0%, transparent 50%); }
     </style>
 </head>
 
 <body>
-
     <div id="table-light"></div>
-
     <div id="candles">
-        <div class="candle-wrapper">
-            <div class="candle" id="c1">
-                <div class="wick"></div>
-                <div class="flame"></div>
-            </div>
-        </div>
-        <div class="candle-wrapper">
-            <div class="candle" id="c2">
-                <div class="wick"></div>
-                <div class="flame"></div>
-            </div>
-        </div>
-        <div class="candle-wrapper">
-            <div class="candle" id="c3">
-                <div class="wick"></div>
-                <div class="flame"></div>
-            </div>
-        </div>
+        <div class="candle-wrapper"><div class="candle" id="c1"><div class="wick"></div><div class="flame"></div></div></div>
+        <div class="candle-wrapper"><div class="candle" id="c2"><div class="wick"></div><div class="flame"></div></div></div>
+        <div class="candle-wrapper"><div class="candle" id="c3"><div class="wick"></div><div class="flame"></div></div></div>
     </div>
 
     <div class="message" id="msg1">不属于这个时代的愚者啊</div>
     <div class="message" id="msg2">您是灰雾之上的神秘主宰</div>
     <div class="message" id="msg3">您是执掌好运的黄黑之王</div>
+    <div class="message" id="msg4">我祈求您为我打开网站https://yizhimoshushi.github.io/xx/</div>
 
-    <div id="fog">
-        <div class="fog-layer"></div>
-        <div class="fog-layer"></div>
-        <div class="fog-layer"></div>
-    </div>
-
-    <div id="hint">点击屏幕…</div>
+    <div id="fog"><div class="fog-layer"></div><div class="fog-layer"></div><div class="fog-layer"></div></div>
+    <div id="hint">点击屏幕进行仪式</div>
 
     <script>
         let stage = 0;
         const candles = [document.getElementById('c1'), document.getElementById('c2'), document.getElementById('c3')];
-        const msgs = [document.getElementById('msg1'), document.getElementById('msg2'), document.getElementById('msg3')];
+        const msgs = [
+            document.getElementById('msg1'),
+            document.getElementById('msg2'),
+            document.getElementById('msg3'),
+            document.getElementById('msg4')
+        ];
         const fog = document.getElementById('fog');
         const hint = document.getElementById('hint');
         const tableLight = document.getElementById('table-light');
 
         const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-        // 每根蜡烛进入猛烈态的延迟偏移(ms)
         const FIERCE_DELAYS = [0, 300, 650];
-        const TRANSITION_DURATION = 750; // 与CSS transition 0.75s匹配
+        const TRANSITION_DURATION = 750;
+        const TARGET_URL = "https://yizhimoshushi.github.io/xx/";
+
+        // ★ 将火焰猛烈化抽离为独立异步函数，不阻塞文字流程
+        function triggerFierceFlames() {
+            candles.forEach((c, i) => {
+                setTimeout(() => {
+                    c.classList.add('transitioning');
+                    setTimeout(() => {
+                        c.classList.remove('transitioning');
+                        c.classList.add('fierce');
+                    }, TRANSITION_DURATION);
+                }, FIERCE_DELAYS[i]);
+            });
+            // 环境光同步增强（取最大延迟 + 过渡时长后生效）
+            const maxDelay = Math.max(...FIERCE_DELAYS) + TRANSITION_DURATION;
+            setTimeout(() => {
+                tableLight.classList.add('fierce');
+            }, maxDelay);
+        }
+
+        // ★ 统一的单条消息展示函数，保证每句间隔完全一致
+        async function showMessage(msgEl, displayTime = 1600) {
+            msgEl.classList.add('show');
+            await sleep(displayTime);
+            msgEl.classList.remove('show');
+            msgEl.classList.add('hide');
+            await sleep(100); // hide动画启动后的固定间隙
+        }
 
         document.body.addEventListener('click', async () => {
             stage++;
@@ -540,10 +266,9 @@
                     c.classList.add('visible');
                     await sleep(400);
                 }
-                hint.textContent = '再次点击点燃…';
+                hint.textContent = '点击点燃蜡烛…';
                 hint.style.opacity = '1';
             }
-
             else if (stage === 2) {
                 hint.style.opacity = '0';
                 for (const c of candles) {
@@ -556,47 +281,36 @@
                     await sleep(500);
                 }
                 tableLight.classList.add('on');
-                hint.textContent = '再次点击…';
+                hint.textContent = '再次点击开始仪式…';
                 hint.style.opacity = '1';
             }
-
             else if (stage === 3) {
                 hint.style.opacity = '0';
 
-                // 依次显示咒文
-                for (const m of msgs) {
-                    m.classList.add('show');
-                    await sleep(1600);
-                    m.classList.remove('show');
-                    m.classList.add('hide');
-                    await sleep(100);
-                }
+                // 第1句
+                await showMessage(msgs[0]);
 
-                await sleep(400);
+                // 第2句
+                await showMessage(msgs[1]);
 
-                // ★ 错峰触发：每根蜡烛独立走 transitioning → fierce 流程
-                const fiercePromises = candles.map((c, i) => {
-                    return new Promise(resolve => {
-                        setTimeout(() => {
-                            c.classList.add('transitioning');
-                            setTimeout(() => {
-                                c.classList.remove('transitioning');
-                                c.classList.add('fierce');
-                                resolve();
-                            }, TRANSITION_DURATION);
-                        }, FIERCE_DELAYS[i]);
-                    });
-                });
+                // ★ 第2句结束后立即触发火焰猛烈化（异步，不阻塞后续文字）
+                triggerFierceFlames();
 
-                // 等所有蜡烛完成过渡后，再增强环境光
-                await Promise.all(fiercePromises);
-                tableLight.classList.add('fierce');
+                // 第3句 —— 与前面间隔完全一致，不再有额外停顿
+                await showMessage(msgs[2]);
 
-                await sleep(600);
+                // 第4句
+                await showMessage(msgs[3], 2000);
+
+                // 全部说完后灰雾弥漫
+                await sleep(700);
                 fog.classList.add('active');
+
+                // 等待后跳转
+                await sleep(3000);
+                window.location.href = TARGET_URL;
             }
         });
     </script>
 </body>
-
 </html>

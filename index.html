@@ -3,35 +3,56 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 添加 viewport-fit=cover 适配刘海屏/全面屏 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>启动动画</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        /* 禁止移动端默认的触摸高亮和长按菜单 */
         body {
-            width: 100vw; height: 100vh; overflow: hidden; cursor: default; user-select: none;
+            width: 100vw; height: 100vh; height: 100dvh; /* dvh 解决移动端地址栏问题 */
+            overflow: hidden; cursor: default; user-select: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation; /* 优化点击响应 */
             background:
                 repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.05) 2px, rgba(0,0,0,0.05) 4px),
                 repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(0,0,0,0.04) 2px, rgba(0,0,0,0.04) 4px),
                 radial-gradient(ellipse at 30% 40%, #3a3a3a 0%, #2a2a2a 40%, #1a1a1a 70%, #111 100%);
             background-color: #222;
         }
+
         body::before {
             content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
             background: url("data:image/svg+xml,%3Csvg width='6' height='6' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='1' height='1' x='0' y='0' fill='rgba(255,255,255,0.02)'/%3E%3Crect width='1' height='1' x='3' y='3' fill='rgba(0,0,0,0.06)'/%3E%3C/svg%3E") repeat;
         }
+
         #hint {
-            position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
-            color: rgba(255,255,255,0.3); font-family: 'Georgia', serif; font-size: 14px;
+            position: fixed; bottom: max(40px, env(safe-area-inset-bottom));
+            left: 50%; transform: translateX(-50%);
+            color: rgba(255,255,255,0.3); font-family: 'Georgia', serif; 
+            font-size: clamp(12px, 3vmin, 14px); /* 响应式字号 */
             letter-spacing: 2px; transition: opacity 0.8s; z-index: 100;
+            white-space: nowrap;
         }
+
         #candles { position: fixed; inset: 0; z-index: 10; pointer-events: none; }
-        .candle-wrapper { position: absolute; display: flex; justify-content: center; align-items: flex-end; }
-        .candle-wrapper:nth-child(1) { top: calc(50% - 80px); left: calc(50% - 180px); }
-        .candle-wrapper:nth-child(2) { top: calc(50% - 80px); left: calc(50% + 166px); }
-        .candle-wrapper:nth-child(3) { top: calc(50% + 120px); left: calc(50% - 7px); }
+        .candle-wrapper { 
+            position: absolute; display: flex; justify-content: center; align-items: flex-end; 
+            /* 使用 vmin 确保在任何比例的屏幕上都能保持相对位置 */
+        }
+        
+        /* ★ 核心修复：响应式布局定位 */
+        .candle-wrapper:nth-child(1) { top: calc(50% - 12vmin); left: calc(50% - 22vmin); }
+        .candle-wrapper:nth-child(2) { top: calc(50% - 12vmin); left: calc(50% + 22vmin); }
+        .candle-wrapper:nth-child(3) { top: calc(50% + 18vmin); left: 50%; }
 
         .candle {
-            position: absolute; width: 14px; height: 60px;
+            position: absolute; 
+            /* 蜡烛尺寸响应式 */
+            width: clamp(10px, 2vmin, 14px); 
+            height: clamp(40px, 9vmin, 60px);
             background: linear-gradient(90deg, #d8d0c4 0%, #f5f0e8 25%, #fff 50%, #f0ebe0 75%, #cdc5b8 100%);
             border-radius: 2px; z-index: 2; cursor: pointer; opacity: 0;
             transform: translateY(-30px);
@@ -57,7 +78,9 @@
 
         .flame {
             position: absolute; left: 50%; z-index: 3; pointer-events: none;
-            --fw: 10px; --fh: 18px; --ft: -28px;
+            --fw: clamp(8px, 1.5vmin, 10px); 
+            --fh: clamp(14px, 2.8vmin, 18px); 
+            --ft: calc(var(--fh) * -1.5);
             --blur-outer: 1.2px; --bright-outer: 1.3;
             --blur-inner: 0.6px; --bright-inner: 1.4;
             --glow-spread: 4px; --glow-alpha: 0.6;
@@ -102,7 +125,7 @@
         }
 
         .candle.transitioning .flame {
-            --fw: 14px; --fh: 28px; --ft: -34px;
+            --fw: clamp(12px, 2.2vmin, 14px); --fh: clamp(22px, 4.5vmin, 28px); --ft: calc(var(--fh) * -1.2);
             --blur-outer: 1.8px; --bright-outer: 1.6;
             --blur-inner: 0.8px; --bright-inner: 1.7;
             --glow-spread: 8px; --glow-alpha: 0.85;
@@ -123,7 +146,7 @@
         }
 
         .candle.fierce .flame {
-            --fw: 18px; --fh: 36px; --ft: -38px;
+            --fw: clamp(14px, 3vmin, 18px); --fh: clamp(28px, 6vmin, 36px); --ft: calc(var(--fh) * -1.1);
             --blur-outer: 2px; --bright-outer: 1.6;
             --blur-inner: 1px; --bright-inner: 2;
             --glow-spread: 12px; --glow-alpha: 1;
@@ -152,15 +175,26 @@
             100% { transform: translateX(-50%) scaleY(0.8) scaleX(1.1); }
         }
 
+        /* ★ 核心修复：消息框移动端适配 */
         .message {
             position: fixed; left: 50%; bottom: -80px; transform: translateX(-50%);
-            font-family: 'Georgia', serif; font-size: 24px; color: rgba(255,255,255,0.9);
+            font-family: 'Georgia', serif; 
+            /* 响应式字号，最小16px防止过小，最大24px */
+            font-size: clamp(16px, 5vmin, 24px); 
+            color: rgba(255,255,255,0.9);
             text-shadow: 0 0 20px rgba(255,180,80,0.7), 0 0 60px rgba(255,120,0,0.3);
             opacity: 0; transition: bottom 1s ease, opacity 0.8s ease;
-            z-index: 50; pointer-events: none; white-space: nowrap;
+            z-index: 50; pointer-events: none; 
+            /* 允许换行，居中显示，限制最大宽度 */
+            white-space: normal; 
+            text-align: center;
+            width: 90vw;
+            max-width: 600px;
+            line-height: 1.5;
+            padding: 0 10px;
         }
-        .message.show { bottom: 120px; opacity: 1; }
-        .message.hide { opacity: 0; bottom: 160px; }
+        .message.show { bottom: max(120px, 20vh); opacity: 1; }
+        .message.hide { opacity: 0; bottom: max(160px, 25vh); }
 
         #fog {
             position: fixed; inset: 0; z-index: 200; pointer-events: none;
@@ -205,7 +239,9 @@
     <div class="message" id="msg1">不属于这个时代的愚者啊</div>
     <div class="message" id="msg2">您是灰雾之上的神秘主宰</div>
     <div class="message" id="msg3">您是执掌好运的黄黑之王</div>
-    <div class="message" id="msg4">我祈求您为我打开网站https://yizhimoshushi.github.io/xx/</div>
+    <div class="message" id="msg4">我祈求您的注视</div>
+    <div class="message" id="msg5">我祈求您的眷顾</div>
+    <div class="message" id="msg6">我祈求您为我打开网站<br>https://yizhimoshushi.github.io/xx/</div>
 
     <div id="fog"><div class="fog-layer"></div><div class="fog-layer"></div><div class="fog-layer"></div></div>
     <div id="hint">点击屏幕进行仪式</div>
@@ -217,7 +253,9 @@
             document.getElementById('msg1'),
             document.getElementById('msg2'),
             document.getElementById('msg3'),
-            document.getElementById('msg4')
+            document.getElementById('msg4'),
+            document.getElementById('msg5'),
+            document.getElementById('msg6')
         ];
         const fog = document.getElementById('fog');
         const hint = document.getElementById('hint');
@@ -229,7 +267,6 @@
         const TRANSITION_DURATION = 750;
         const TARGET_URL = "https://yizhimoshushi.github.io/xx/";
 
-        // ★ 将火焰猛烈化抽离为独立异步函数，不阻塞文字流程
         function triggerFierceFlames() {
             candles.forEach((c, i) => {
                 setTimeout(() => {
@@ -240,23 +277,27 @@
                     }, TRANSITION_DURATION);
                 }, FIERCE_DELAYS[i]);
             });
-            // 环境光同步增强（取最大延迟 + 过渡时长后生效）
             const maxDelay = Math.max(...FIERCE_DELAYS) + TRANSITION_DURATION;
             setTimeout(() => {
                 tableLight.classList.add('fierce');
             }, maxDelay);
         }
 
-        // ★ 统一的单条消息展示函数，保证每句间隔完全一致
         async function showMessage(msgEl, displayTime = 1600) {
             msgEl.classList.add('show');
             await sleep(displayTime);
             msgEl.classList.remove('show');
             msgEl.classList.add('hide');
-            await sleep(100); // hide动画启动后的固定间隙
+            await sleep(100);
         }
 
-        document.body.addEventListener('click', async () => {
+        // 同时监听 click 和 touchend 以确保移动端即时响应
+        const handleInteraction = async (e) => {
+            // 防止 touchend 和 click 双重触发
+            if (e.type === 'touchend') {
+                e.preventDefault(); 
+            }
+            
             stage++;
 
             if (stage === 1) {
@@ -287,30 +328,27 @@
             else if (stage === 3) {
                 hint.style.opacity = '0';
 
-                // 第1句
                 await showMessage(msgs[0]);
-
-                // 第2句
                 await showMessage(msgs[1]);
-
-                // ★ 第2句结束后立即触发火焰猛烈化（异步，不阻塞后续文字）
-                triggerFierceFlames();
-
-                // 第3句 —— 与前面间隔完全一致，不再有额外停顿
                 await showMessage(msgs[2]);
 
-                // 第4句
-                await showMessage(msgs[3], 2000);
+                triggerFierceFlames();
 
-                // 全部说完后灰雾弥漫
+                await showMessage(msgs[3]);
+                await showMessage(msgs[4]);
+                // URL较长，移动端多给一点阅读时间
+                await showMessage(msgs[5], 2500);
+
                 await sleep(700);
                 fog.classList.add('active');
 
-                // 等待后跳转
                 await sleep(3000);
                 window.location.href = TARGET_URL;
             }
-        });
+        };
+
+        document.body.addEventListener('click', handleInteraction);
+        document.body.addEventListener('touchend', handleInteraction, { passive: false });
     </script>
 </body>
 </html>
